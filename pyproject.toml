@@ -1,0 +1,18 @@
+[project]
+name = "fqc"
+version = "0.1.0"
+description = "First quantum computing repo."
+readme = "README.md"
+authors = [
+    { name = "fangshen.727", email = "fangshen.727@bytedance.com" }
+]
+requires-python = ">=3.12, <3.13"
+dependencies = [
+    "qiskit-aer>=0.17.2",
+    "qiskit-ibm-runtime>=0.50.0",
+    "qiskit[visualization]>=2.5.2",
+]
+
+[build-system]
+requires = ["uv_build>=0.10.7,<0.11.0"]
+build-backend = "uv_build"
