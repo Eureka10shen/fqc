@@ -25,10 +25,18 @@ electrons = 2
 hf = qp.qchem.hf_state(electrons, qubits)
 print(hf)
 
+singles, doubles = qp.qchem.excitations(electrons, qubits)
+s_wires, d_wires = qp.qchem.excitations_to_wires(singles, doubles)
+
 @qp.qnode(dev, interface="jax")
-def circuit(param, wires):
-    qp.BasisState(hf, wires=wires)
-    qp.DoubleExcitation(param, wires=[0, 1, 2, 3])
+def circuit(params, wires):
+    qp.UCCSD(
+        params,
+        wires=wires,
+        s_wires=s_wires,
+        d_wires=d_wires,
+        init_state=hf,
+    )
     return qp.expval(H)
 
 def cost_fn(param):
@@ -37,9 +45,9 @@ def cost_fn(param):
 max_iterations = 100
 conv_tol = 1e-06
 
-opt = optax.sgd(learning_rate=0.4)
+opt = optax.adam(learning_rate=0.4)
 
-theta = np.array(0.)
+theta = np.zeros(len(singles) + len(doubles))
 
 # store the values of the cost function
 energy = [cost_fn(theta)]
@@ -66,7 +74,7 @@ for n in range(max_iterations):
         break
 
 print("\n" f"Final value of the ground-state energy = {energy[-1]:.8f} Ha")
-print("\n" f"Optimal value of the circuit parameter = {angle[-1]:.4f}")
+print("\nOptimal values of the circuit parameters =", angle[-1])
 
 ### --- Draw the optimized circuit ---
 circuit_figure, _ = qp.draw_mpl(circuit)(theta, wires=range(qubits))
@@ -97,7 +105,7 @@ plt.yticks(fontsize=12)
 ax2 = fig.add_subplot(122)
 ax2.plot(range(n + 2), angle, "go", ls="dashed")
 ax2.set_xlabel("Optimization step", fontsize=13)
-ax2.set_ylabel("Gate parameter $\\theta$ (rad)", fontsize=13)
+ax2.set_ylabel("UCCSD parameters (rad)", fontsize=13)
 plt.xticks(fontsize=12)
 plt.yticks(fontsize=12)
 
